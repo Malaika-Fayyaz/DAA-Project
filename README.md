@@ -1,12 +1,11 @@
-# 🔐 RSA Key Generator using C and Cloud Computing
+# RSA Key Generator using C and Cloud Computing
 
-## 📘 Introduction
+## Introduction
 
 This project aims to build an efficient and secure **RSA Key Generator** using the **C programming language**, optionally optimized with **assembly**, and enhanced by the computational power of **cloud computing**. It is being developed as part of an academic course project.
 
----
 
-## 💡 The Core Idea: Stringing it All Together
+## The Core Idea
 
 We started from the basic principle of RSA encryption—generate two large prime numbers and use them to compute a public-private key pair.
 
@@ -28,15 +27,12 @@ For performance-critical components like modular exponentiation, assembly-level 
 
 This brings together **low-level efficiency** and **scalable computing power** to build a capable RSA key generation system.
 
----
 
-## 🚀 Applications
+## Applications
 
-- 🔐 **Secure Communication** – Used in encrypted messaging and secure protocols
-- 📚 **Education** – Great for understanding cryptography and system-level programming
-- 🛠️ **Practical Tool** – Can extend to secure file transfer, digital signatures, etc.
-
----
+- **Secure Communication** – Used in encrypted messaging and secure protocols
+- **Education** – Great for understanding cryptography and system-level programming
+- **Practical Tool** – Can extend to secure file transfer, digital signatures, etc.
 
 ## ☁️ Cloud Use Case
 
@@ -48,9 +44,8 @@ This brings together **low-level efficiency** and **scalable computing power** t
 
 The C application will be deployed on a cloud VM with sufficient CPU/memory. It handles key generation server-side and optionally returns the output to a client machine. For advanced optimization, we may explore parallel prime generation using tools like **MPI**.
 
----
 
-## 🛠️ Implementation Overview
+## Implementation Overview
 
 The RSA generator will be compiled and deployed to a cloud-based virtual machine. A startup script sets up the environment and installs necessary dependencies. The C program runs server-side to generate large primes and compute RSA keys.
 
@@ -60,8 +55,7 @@ The resulting keys can be displayed or downloaded. Future additions may include:
 - Parallel execution models
 - Benchmarking reports
 
----
 
-## ✅ Conclusion
+## Conclusion
 
 This project brings together system-level programming and cloud computing to create a secure, fast RSA key generation system. It will evolve with new features, optimizations, and learning as we progress.
