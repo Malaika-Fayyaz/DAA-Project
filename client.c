@@ -7,7 +7,7 @@
 
 #define SERVER1_PORT 9999
 #define SERVER2_PORT 9998
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "20.40.60.119"
 
 // Global buffers to hold primes as strings
 char prime1[1024] = {0};
