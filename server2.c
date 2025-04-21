@@ -87,7 +87,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server 1 listening on port %d...\n", PORT);
+    printf("Server 2 listening on port %d...\n", PORT);
 
     if ((client_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen)) < 0) {
         perror("accept failed");
@@ -95,7 +95,7 @@ int main() {
     }
 
     int prime = generate_prime();
-    printf("Server 1 generated prime: %d\n", prime);
+    printf("Server 2 generated prime: %d\n", prime);
 
     char prime_str[12];
     sprintf(prime_str, "%d", prime);
