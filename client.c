@@ -7,16 +7,16 @@
 
 #define SERVER1_PORT 9999
 #define SERVER2_PORT 9998
-#define SERVER_IP "20.40.60.119"
+#define SERVER1_IP "20.40.60.119"     
+#define SERVER2_IP "20.2.218.161"     
 
-// Global buffers to hold primes as strings
 char prime1[1024] = {0};
 char prime2[1024] = {0};
 
-// Function to handle communication with the server
 void *connect_to_server(void *arg) {
     int port = *(int *)arg;
-    free(arg);  // Free the dynamically allocated memory
+    free(arg);  
+
     SOCKET sock;
     struct sockaddr_in server;
     char buffer[1024] = {0};
@@ -28,17 +28,28 @@ void *connect_to_server(void *arg) {
         return NULL;
     }
 
-    server.sin_addr.s_addr = inet_addr(SERVER_IP);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-
-    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        printf("Connection failed on port %d: %d\n", port, WSAGetLastError());
+    const char *ip;
+    if (port == SERVER1_PORT) {
+        ip = SERVER1_IP;
+    } else if (port == SERVER2_PORT) {
+        ip = SERVER2_IP;
+    } else {
+        printf("Unknown port: %d\n", port);
         closesocket(sock);
         return NULL;
     }
 
-    printf("Connected to server on port %d.\n", port);
+    server.sin_addr.s_addr = inet_addr(ip);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+
+    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        printf("Connection failed to %s:%d (error: %d)\n", ip, port, WSAGetLastError());
+        closesocket(sock);
+        return NULL;
+    }
+
+    printf("Connected to server at %s:%d\n", ip, port);
 
     recv_size = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (recv_size == SOCKET_ERROR) {
@@ -82,7 +93,7 @@ long long mod_inverse(long long e, long long phi) {
         new_r = temp_r - quotient * new_r;
     }
 
-    if (r > 1) return -1; // No inverse
+    if (r > 1) return -1; 
     if (t < 0) t += phi;
     return t;
 }
