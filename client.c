@@ -1,30 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <winsock2.h>
+#include <string.h>
+#include <unistd.h>
 #include <pthread.h>
-
-#pragma comment(lib, "ws2_32.lib")
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #define SERVER1_PORT 9999
 #define SERVER2_PORT 9998
-#define SERVER1_IP "20.40.60.119"     
-#define SERVER2_IP "20.2.218.161"     
+#define SERVER1_IP "20.40.60.119"
+#define SERVER2_IP "20.2.218.161"
 
 char prime1[1024] = {0};
 char prime2[1024] = {0};
 
 void *connect_to_server(void *arg) {
     int port = *(int *)arg;
-    free(arg);  
+    free(arg);
 
-    SOCKET sock;
+    int sock;
     struct sockaddr_in server;
     char buffer[1024] = {0};
     int recv_size;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == INVALID_SOCKET) {
-        printf("Socket creation failed: %d\n", WSAGetLastError());
+    if (sock < 0) {
+        perror("Socket creation failed");
         return NULL;
     }
 
@@ -34,26 +36,30 @@ void *connect_to_server(void *arg) {
     } else if (port == SERVER2_PORT) {
         ip = SERVER2_IP;
     } else {
-        printf("Unknown port: %d\n", port);
-        closesocket(sock);
+        fprintf(stderr, "Unknown port: %d\n", port);
+        close(sock);
         return NULL;
     }
 
-    server.sin_addr.s_addr = inet_addr(ip);
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
+    if (inet_pton(AF_INET, ip, &server.sin_addr) <= 0) {
+        fprintf(stderr, "Invalid address for %s\n", ip);
+        close(sock);
+        return NULL;
+    }
 
     if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        printf("Connection failed to %s:%d (error: %d)\n", ip, port, WSAGetLastError());
-        closesocket(sock);
+        perror("Connection failed");
+        close(sock);
         return NULL;
     }
 
     printf("Connected to server at %s:%d\n", ip, port);
 
     recv_size = recv(sock, buffer, sizeof(buffer) - 1, 0);
-    if (recv_size == SOCKET_ERROR) {
-        printf("Receive failed: %d\n", WSAGetLastError());
+    if (recv_size < 0) {
+        perror("Receive failed");
     } else {
         buffer[recv_size] = '\0';
         if (port == SERVER1_PORT) {
@@ -65,7 +71,7 @@ void *connect_to_server(void *arg) {
         }
     }
 
-    closesocket(sock);
+    close(sock);
     return NULL;
 }
 
@@ -93,18 +99,12 @@ long long mod_inverse(long long e, long long phi) {
         new_r = temp_r - quotient * new_r;
     }
 
-    if (r > 1) return -1; 
+    if (r > 1) return -1;
     if (t < 0) t += phi;
     return t;
 }
 
 int main() {
-    WSADATA wsa;
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-        printf("WSAStartup failed. Error Code: %d\n", WSAGetLastError());
-        return 1;
-    }
-
     pthread_t thread1, thread2;
     int *port1 = malloc(sizeof(int));
     int *port2 = malloc(sizeof(int));
@@ -119,13 +119,11 @@ int main() {
 
     printf("\nBoth primes received.\nPrime1: %s\nPrime2: %s\n", prime1, prime2);
 
-    // Convert to integers
     unsigned long long p = strtoull(prime1, NULL, 10);
     unsigned long long q = strtoull(prime2, NULL, 10);
 
     if (p == 0 || q == 0) {
         printf("Invalid prime values received.\n");
-        WSACleanup();
         return 1;
     }
 
@@ -135,14 +133,12 @@ int main() {
 
     if (gcd(e, phi) != 1) {
         printf("e and phi(n) are not co-prime. Choose different primes.\n");
-        WSACleanup();
         return 1;
     }
 
     long long d = mod_inverse(e, phi);
     if (d == -1) {
         printf("Modular inverse for e does not exist.\n");
-        WSACleanup();
         return 1;
     }
 
@@ -150,6 +146,5 @@ int main() {
     printf("Public Key: (e = %llu, n = %llu)\n", e, n);
     printf("Private Key: (d = %lld, n = %llu)\n", d, n);
 
-    WSACleanup();
     return 0;
 }
