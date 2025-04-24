@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-#define PORT 9999
+#define PORT 9998
 #define PRIME_DIGITS 100
 
 void generate_prime(mpz_t prime) {
