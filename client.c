@@ -6,14 +6,15 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <gmp.h>
 
 #define SERVER1_PORT 9999
 #define SERVER2_PORT 9998
 #define SERVER1_IP "20.40.60.119"
 #define SERVER2_IP "20.2.218.161"
 
-char prime1[1024] = {0};
-char prime2[1024] = {0};
+char prime1[2048] = {0};
+char prime2[2048] = {0};
 
 void *connect_to_server(void *arg) {
     int port = *(int *)arg;
@@ -21,7 +22,7 @@ void *connect_to_server(void *arg) {
 
     int sock;
     struct sockaddr_in server;
-    char buffer[1024] = {0};
+    char buffer[2048] = {0};
     int recv_size;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -30,16 +31,7 @@ void *connect_to_server(void *arg) {
         return NULL;
     }
 
-    const char *ip;
-    if (port == SERVER1_PORT) {
-        ip = SERVER1_IP;
-    } else if (port == SERVER2_PORT) {
-        ip = SERVER2_IP;
-    } else {
-        fprintf(stderr, "Unknown port: %d\n", port);
-        close(sock);
-        return NULL;
-    }
+    const char *ip = (port == SERVER1_PORT) ? SERVER1_IP : SERVER2_IP;
 
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
@@ -64,44 +56,15 @@ void *connect_to_server(void *arg) {
         buffer[recv_size] = '\0';
         if (port == SERVER1_PORT) {
             snprintf(prime1, sizeof(prime1), "%s", buffer);
-            printf("Received prime from Server 1: %s\n", prime1);
+            printf("Received prime from Server 1\n");
         } else if (port == SERVER2_PORT) {
             snprintf(prime2, sizeof(prime2), "%s", buffer);
-            printf("Received prime from Server 2: %s\n", prime2);
+            printf("Received prime from Server 2\n");
         }
     }
 
     close(sock);
     return NULL;
-}
-
-int gcd(int a, int b) {
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
-}
-
-long long mod_inverse(long long e, long long phi) {
-    long long t = 0, new_t = 1;
-    long long r = phi, new_r = e;
-
-    while (new_r != 0) {
-        long long quotient = r / new_r;
-        long long temp_t = t;
-        t = new_t;
-        new_t = temp_t - quotient * new_t;
-
-        long long temp_r = r;
-        r = new_r;
-        new_r = temp_r - quotient * new_r;
-    }
-
-    if (r > 1) return -1;
-    if (t < 0) t += phi;
-    return t;
 }
 
 int main() {
@@ -117,34 +80,48 @@ int main() {
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
 
-    printf("\nBoth primes received.\nPrime1: %s\nPrime2: %s\n", prime1, prime2);
+    printf("\nBoth primes received.\n");
 
-    unsigned long long p = strtoull(prime1, NULL, 10);
-    unsigned long long q = strtoull(prime2, NULL, 10);
+    // Big Integer Setup
+    mpz_t p, q, n, phi, e, d;
+    mpz_inits(p, q, n, phi, e, d, NULL);
 
-    if (p == 0 || q == 0) {
-        printf("Invalid prime values received.\n");
-        return 1;
-    }
+    mpz_set_str(p, prime1, 10);
+    mpz_set_str(q, prime2, 10);
 
-    unsigned long long n = p * q;
-    unsigned long long phi = (p - 1) * (q - 1);
-    unsigned long long e = 65537;
+    // n = p * q
+    mpz_mul(n, p, q);
 
-    if (gcd(e, phi) != 1) {
+    // phi = (p-1)*(q-1)
+    mpz_t p1, q1;
+    mpz_inits(p1, q1, NULL);
+    mpz_sub_ui(p1, p, 1);
+    mpz_sub_ui(q1, q, 1);
+    mpz_mul(phi, p1, q1);
+
+    // e = 65537
+    mpz_set_ui(e, 65537);
+
+    // check gcd(e, phi) == 1
+    mpz_t gcd;
+    mpz_init(gcd);
+    mpz_gcd(gcd, e, phi);
+    if (mpz_cmp_ui(gcd, 1) != 0) {
         printf("e and phi(n) are not co-prime. Choose different primes.\n");
         return 1;
     }
 
-    long long d = mod_inverse(e, phi);
-    if (d == -1) {
+    // d = e^(-1) mod phi
+    if (!mpz_invert(d, e, phi)) {
         printf("Modular inverse for e does not exist.\n");
         return 1;
     }
 
+    // Output the RSA keypair
     printf("\n--- RSA Key Pair ---\n");
-    printf("Public Key: (e = %llu, n = %llu)\n", e, n);
-    printf("Private Key: (d = %lld, n = %llu)\n", d, n);
+    gmp_printf("Public Key: (e = %Zd, n = %Zd)\n", e, n);
+    gmp_printf("Private Key: (d = %Zd, n = %Zd)\n", d, n);
 
+    mpz_clears(p, q, n, phi, e, d, p1, q1, gcd, NULL);
     return 0;
 }
