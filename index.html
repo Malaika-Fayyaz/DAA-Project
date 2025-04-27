@@ -1,1 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secret RSA Lab</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="typing-text"></h1>
+
+        <div class="button-container">
+            <button onclick="showEncrypt()">Encrypt</button>
+            <button onclick="showDecrypt()">Decrypt</button>
+        </div>
+
+        <div id="encrypt-section" class="hidden">
+            <textarea id="encrypt-input" placeholder="Enter your secret message here..."></textarea>
+            <button onclick="encryptMessage()">Encrypt Message</button>
+            <p id="encrypt-output"></p>
+        </div>
+
+        <div id="decrypt-section" class="hidden">
+            <textarea id="decrypt-input" placeholder="Paste your cipher text here..."></textarea>
+            <button onclick="decryptMessage()">Decrypt Message</button>
+            <p id="decrypt-output"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
 
