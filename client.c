@@ -67,6 +67,20 @@ void *connect_to_server(void *arg) {
     return NULL;
 }
 
+// Helper: Convert string -> number
+void string_to_number(mpz_t result, const char *input) {
+    mpz_import(result, strlen(input), 1, sizeof(input[0]), 0, 0, input);
+}
+
+// Helper: Convert number -> string
+void number_to_string(char *output, mpz_t number) {
+    size_t count;
+    char *str = (char *)mpz_export(NULL, &count, 1, sizeof(char), 0, 0, number);
+    memcpy(output, str, count);
+    output[count] = '\0';
+    free(str);
+}
+
 int main() {
     pthread_t thread1, thread2;
     int *port1 = malloc(sizeof(int));
@@ -128,14 +142,25 @@ int main() {
     scanf("%s", choice);
 
     if (strcmp(choice, "encrypt") == 0) {
-        char message_str[2048];
-        printf("Enter the message to encrypt (as a number): ");
-        scanf("%s", message_str);
+        char input_string[1024];
+        printf("Enter the string to encrypt: ");
+        getchar(); // clear newline
+        fgets(input_string, sizeof(input_string), stdin);
+
+        // Remove trailing newline
+        size_t len = strlen(input_string);
+        if (input_string[len-1] == '\n') input_string[len-1] = '\0';
 
         mpz_t message, cipher;
         mpz_inits(message, cipher, NULL);
 
-        mpz_set_str(message, message_str, 10);
+        string_to_number(message, input_string);
+
+        // Check if message >= n
+        if (mpz_cmp(message, n) >= 0) {
+            printf("Error: message too large for the current RSA modulus.\n");
+            return 1;
+        }
 
         // cipher = message^e mod n
         mpz_powm(cipher, message, e, n);
@@ -144,6 +169,7 @@ int main() {
         gmp_printf("%Zd\n", cipher);
 
         mpz_clears(message, cipher, NULL);
+
     } else if (strcmp(choice, "decrypt") == 0) {
         char cipher_str[2048];
         printf("Enter the cipher text to decrypt (as a number): ");
@@ -157,8 +183,11 @@ int main() {
         // message = cipher^d mod n
         mpz_powm(decrypted_message, cipher, d, n);
 
+        char output_string[1024];
+        number_to_string(output_string, decrypted_message);
+
         printf("\nDecrypted message is:\n");
-        gmp_printf("%Zd\n", decrypted_message);
+        printf("%s\n", output_string);
 
         mpz_clears(cipher, decrypted_message, NULL);
     } else {
