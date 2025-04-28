@@ -170,27 +170,40 @@ int main() {
 
         mpz_clears(message, cipher, NULL);
 
-    } else if (strcmp(choice, "decrypt") == 0) {
-        char cipher_str[2048];
-        printf("Enter the cipher text to decrypt (as a number): ");
-        scanf("%s", cipher_str);
+    }
+    else if (strcmp(choice, "decrypt") == 0) {
+    char d_str[4096];
+    char n_str[4096];
+    char cipher_str[4096];
 
-        mpz_t cipher, decrypted_message;
-        mpz_inits(cipher, decrypted_message, NULL);
+    printf("Enter private key 'd' : ");
+    scanf("%s", d_str);
 
-        mpz_set_str(cipher, cipher_str, 10);
+    printf("Enter modulus 'n' : ");
+    scanf("%s", n_str);
 
-        // message = cipher^d mod n
-        mpz_powm(decrypted_message, cipher, d, n);
+    printf("Enter the cipher text to decrypt (as a number): ");
+    scanf("%s", cipher_str);
 
-        char output_string[1024];
-        number_to_string(output_string, decrypted_message);
+    mpz_t d_input, n_input, cipher, decrypted_message;
+    mpz_inits(d_input, n_input, cipher, decrypted_message, NULL);
 
-        printf("\nDecrypted message is:\n");
-        printf("%s\n", output_string);
+    mpz_set_str(d_input, d_str, 10);
+    mpz_set_str(n_input, n_str, 10);
+    mpz_set_str(cipher, cipher_str, 10);
 
-        mpz_clears(cipher, decrypted_message, NULL);
-    } else {
+    // decrypted_message = (cipher ^ d) mod n
+    mpz_powm(decrypted_message, cipher, d_input, n_input);
+
+    char output_string[4096];
+    number_to_string(output_string, decrypted_message);
+
+    printf("\nDecrypted message is:\n");
+    printf("%s\n", output_string);
+
+    mpz_clears(d_input, n_input, cipher, decrypted_message, NULL);
+    }
+    else {
         printf("Invalid choice. Please enter 'encrypt' or 'decrypt'.\n");
     }
 
