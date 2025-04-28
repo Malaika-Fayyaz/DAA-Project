@@ -122,6 +122,50 @@ int main() {
     gmp_printf("Public Key: (e = %Zd, n = %Zd)\n", e, n);
     gmp_printf("Private Key: (d = %Zd, n = %Zd)\n", d, n);
 
+    // Encrypt or Decrypt
+    char choice[10];
+    printf("\nDo you want to encrypt or decrypt? (enter 'encrypt' or 'decrypt') : ");
+    scanf("%s", choice);
+
+    if (strcmp(choice, "encrypt") == 0) {
+        char message_str[2048];
+        printf("Enter the message to encrypt (as a number): ");
+        scanf("%s", message_str);
+
+        mpz_t message, cipher;
+        mpz_inits(message, cipher, NULL);
+
+        mpz_set_str(message, message_str, 10);
+
+        // cipher = message^e mod n
+        mpz_powm(cipher, message, e, n);
+
+        printf("\nEncrypted cipher text is:\n");
+        gmp_printf("%Zd\n", cipher);
+
+        mpz_clears(message, cipher, NULL);
+    } else if (strcmp(choice, "decrypt") == 0) {
+        char cipher_str[2048];
+        printf("Enter the cipher text to decrypt (as a number): ");
+        scanf("%s", cipher_str);
+
+        mpz_t cipher, decrypted_message;
+        mpz_inits(cipher, decrypted_message, NULL);
+
+        mpz_set_str(cipher, cipher_str, 10);
+
+        // message = cipher^d mod n
+        mpz_powm(decrypted_message, cipher, d, n);
+
+        printf("\nDecrypted message is:\n");
+        gmp_printf("%Zd\n", decrypted_message);
+
+        mpz_clears(cipher, decrypted_message, NULL);
+    } else {
+        printf("Invalid choice. Please enter 'encrypt' or 'decrypt'.\n");
+    }
+
     mpz_clears(p, q, n, phi, e, d, p1, q1, gcd, NULL);
+
     return 0;
 }
